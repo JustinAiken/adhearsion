@@ -188,9 +188,12 @@ module Adhearsion
       #
       # @param [Hash] :opts
       # @option :opts [Enumerable<String>] :options a collection of possible options
+      # @option :opts [RubySpeech::GRXML::Grammar, String] :grammar a GRXML grammar
       #
       def listen(opts = {})
-        grammar = RubySpeech::GRXML.draw root: 'main' do
+        raise ArgumentError, "You must provide either a grammar or a set of options" unless opts[:grammar] || opts[:options].respond_to?(:each)
+        grammar = opts[:grammar]
+        grammar ||= RubySpeech::GRXML.draw root: 'main' do
           rule id: 'main', scope: 'public' do
             one_of do
               opts[:options].each do |option|

@@ -325,6 +325,16 @@ module Adhearsion
           subject.listen options: %w{yes no}
         end
 
+        it "can execute a user-specified grammar" do
+          expect_component_complete_event
+          subject.should_receive(:execute_component_and_await_completion).once.with(input_component).and_return input_component
+          subject.listen grammar: grxml
+        end
+
+        it "raises ArgumentError when not provided options or a grammar" do
+          expect { subject.listen }.to raise_error(ArgumentError, "You must provide either a grammar or a set of options")
+        end
+
         it "returns the interpretation as the response and status of :match" do
           expect_component_complete_event
           subject.should_receive(:execute_component_and_await_completion).once.with(Punchblock::Component::Input).and_return input_component
