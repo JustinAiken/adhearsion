@@ -183,6 +183,33 @@ module Adhearsion
         end
       end
 
+      #
+      # Listens for speech input from the caller and matches against a collection of possible responses
+      #
+      # @param [Hash] :opts
+      # @option :opts [Enumerable<String>] :options a collection of possible options
+      #
+      def listen(opts = {})
+        grammar = RubySpeech::GRXML.draw root: 'main' do
+          rule id: 'main', scope: 'public' do
+            one_of do
+              opts[:options].each do |option|
+                item { option }
+              end
+            end
+          end
+        end
+
+        input_component = execute_component_and_await_completion Punchblock::Component::Input.new grammar: { value: grammar }
+
+        reason = input_component.complete_event.reason
+
+        Result.new.tap do |result|
+          result.response = reason.interpretation
+          result.status   = :match
+        end
+      end
+
       # @private
       def play_sound_files_for_menu(menu_instance, sound_files)
         digit = nil

@@ -294,6 +294,55 @@ module Adhearsion
 
       end#describe
 
+      describe "#listen" do
+        let(:grxml) {
+          RubySpeech::GRXML.draw :root => 'main' do
+            rule id: 'main', scope: 'public' do
+              one_of do
+                item { 'yes' }
+                item { 'no' }
+              end
+            end
+          end
+        }
+
+        let(:input_component) {
+          Punchblock::Component::Input.new :grammar => { :value => grxml }
+        }
+
+        def expect_component_complete_event
+          complete_event = Punchblock::Event::Complete.new
+          flexmock(complete_event).should_receive(:reason => flexmock(:interpretation => 'yes', :name => :input))
+          flexmock(Punchblock::Component::Input).new_instances do |input|
+            input.should_receive(:complete?).and_return(false)
+            input.should_receive(:complete_event).and_return(complete_event)
+          end
+        end
+
+        it "sends the correct input component" do
+          expect_component_complete_event
+          subject.should_receive(:execute_component_and_await_completion).once.with(input_component).and_return input_component
+          subject.listen options: %w{yes no}
+        end
+
+        it "returns the interpretation as the response and status of :match" do
+          expect_component_complete_event
+          subject.should_receive(:execute_component_and_await_completion).once.with(Punchblock::Component::Input).and_return input_component
+          result = subject.listen options: %w{yes no}
+          result.response.should be == 'yes'
+          result.status.should be == :match
+        end
+
+        context "with a nil timeout" do
+          it "does not set a timeout on the component" do
+            pending
+            expect_component_complete_event
+            subject.should_receive(:execute_component_and_await_completion).once.with(input_component).and_return input_component
+            subject.wait_for_digit timeout
+          end
+        end
+      end # wait_for_digit
+
     end#shared
   end
 end
