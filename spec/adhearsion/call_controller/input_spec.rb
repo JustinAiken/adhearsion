@@ -331,8 +331,16 @@ module Adhearsion
           subject.listen grammar: grxml
         end
 
-        it "raises ArgumentError when not provided options or a grammar" do
-          expect { subject.listen }.to raise_error(ArgumentError, "You must provide either a grammar or a set of options")
+        it "can execute a grammar by url" do
+          expect_component_complete_event
+          url = "http://foo.com/bar.grxml"
+          input_component = Punchblock::Component::Input.new :grammar => { :url => url }
+          subject.should_receive(:execute_component_and_await_completion).once.with(input_component).and_return input_component
+          subject.listen grammar_url: url
+        end
+
+        it "raises ArgumentError when not provided options, a grammar or a grammar URL" do
+          expect { subject.listen }.to raise_error(ArgumentError, "You must provide a grammar, a grammar URL or a set of options")
         end
 
         it "returns the interpretation as the response and status of :match" do

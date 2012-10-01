@@ -189,21 +189,27 @@ module Adhearsion
       # @param [Hash] :opts
       # @option :opts [Enumerable<String>] :options a collection of possible options
       # @option :opts [RubySpeech::GRXML::Grammar, String] :grammar a GRXML grammar
+      # @option :opts [String] :grammar_url a URL to a grammar
       #
       def listen(opts = {})
-        raise ArgumentError, "You must provide either a grammar or a set of options" unless opts[:grammar] || opts[:options].respond_to?(:each)
-        grammar = opts[:grammar]
-        grammar ||= RubySpeech::GRXML.draw root: 'main' do
-          rule id: 'main', scope: 'public' do
-            one_of do
-              opts[:options].each do |option|
-                item { option }
+        raise ArgumentError, "You must provide a grammar, a grammar URL or a set of options" unless opts[:grammar] || opts[:grammar_url] || opts[:options].respond_to?(:each)
+        grammar_opts = if opts[:grammar_url]
+          { url: opts[:grammar_url] }
+        else
+          grammar = opts[:grammar]
+          grammar ||= RubySpeech::GRXML.draw root: 'main' do
+            rule id: 'main', scope: 'public' do
+              one_of do
+                opts[:options].each do |option|
+                  item { option }
+                end
               end
             end
           end
+          { value: grammar }
         end
 
-        input_component = execute_component_and_await_completion Punchblock::Component::Input.new grammar: { value: grammar }
+        input_component = execute_component_and_await_completion Punchblock::Component::Input.new grammar: grammar_opts
 
         reason = input_component.complete_event.reason
 
