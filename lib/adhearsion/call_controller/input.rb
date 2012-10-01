@@ -4,7 +4,7 @@ module Adhearsion
   class CallController
     module Input
 
-      Result = Struct.new(:response, :status, :menu) do
+      Result = Struct.new(:response, :status, :menu, :nlsml) do
         def to_s
           response
         end
@@ -216,6 +216,7 @@ module Adhearsion
         Result.new.tap do |result|
           result.response = reason.interpretation
           result.status   = :match
+          result.nlsml    = reason.find_first('nlsml')
         end
       end
 

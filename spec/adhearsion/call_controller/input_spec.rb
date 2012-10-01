@@ -312,7 +312,9 @@ module Adhearsion
 
         def expect_component_complete_event
           complete_event = Punchblock::Event::Complete.new
-          flexmock(complete_event).should_receive(:reason => flexmock(:interpretation => 'yes', :name => :input))
+          reason = flexmock(:interpretation => 'yes', :name => :input)
+          reason.should_receive(:find_first).with('nlsml').and_return :foo
+          flexmock(complete_event).should_receive(:reason => reason)
           flexmock(Punchblock::Component::Input).new_instances do |input|
             input.should_receive(:complete?).and_return(false)
             input.should_receive(:complete_event).and_return(complete_event)
@@ -343,12 +345,13 @@ module Adhearsion
           expect { subject.listen }.to raise_error(ArgumentError, "You must provide a grammar, a grammar URL or a set of options")
         end
 
-        it "returns the interpretation as the response and status of :match" do
+        it "returns the interpretation as the response, the nlsml and a status of :match" do
           expect_component_complete_event
           subject.should_receive(:execute_component_and_await_completion).once.with(Punchblock::Component::Input).and_return input_component
           result = subject.listen options: %w{yes no}
           result.response.should be == 'yes'
           result.status.should be == :match
+          result.nlsml.should be == :foo
         end
 
         context "with a nil timeout" do
