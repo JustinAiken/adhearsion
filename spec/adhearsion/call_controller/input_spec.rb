@@ -310,10 +310,12 @@ module Adhearsion
           Punchblock::Component::Input.new :grammar => { :value => grxml }
         }
 
-        def expect_component_complete_event
+        def expect_component_complete_event(reason = nil)
           complete_event = Punchblock::Event::Complete.new
-          reason = flexmock(:interpretation => 'yes', :name => :input)
-          reason.should_receive(:find_first).with('nlsml').and_return :foo
+          unless reason
+            reason = flexmock(:interpretation => 'yes', :name => :input)
+            reason.should_receive(:find_first).with('nlsml').and_return :foo
+          end
           flexmock(complete_event).should_receive(:reason => reason)
           flexmock(Punchblock::Component::Input).new_instances do |input|
             input.should_receive(:complete?).and_return(false)
@@ -360,6 +362,19 @@ module Adhearsion
             expect_component_complete_event
             subject.should_receive(:execute_component_and_await_completion).once.with(input_component).and_return input_component
             subject.wait_for_digit timeout
+          end
+        end
+
+        context "when a nomatch occurrs" do
+          before do
+            expect_component_complete_event Punchblock::Component::Input::Complete::NoMatch.new
+          end
+
+          it "should return a response of nil and a status of nomatch" do
+            subject.should_receive(:execute_component_and_await_completion).once.with(input_component).and_return input_component
+            result = subject.listen options: %w{yes no}
+            result.response.should be nil
+            result.status.should be == :nomatch
           end
         end
       end # wait_for_digit

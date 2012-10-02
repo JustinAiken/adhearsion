@@ -214,9 +214,14 @@ module Adhearsion
         reason = input_component.complete_event.reason
 
         Result.new.tap do |result|
-          result.response = reason.interpretation
-          result.status   = :match
-          result.nlsml    = reason.find_first('nlsml')
+          case reason
+          when proc { |r| r.respond_to? :interpretation }
+            result.response = reason.interpretation
+            result.status   = :match
+            result.nlsml    = reason.find_first('nlsml')
+          else
+            result.status = :nomatch
+          end
         end
       end
 
