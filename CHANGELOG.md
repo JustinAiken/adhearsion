@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/adhearsion)
   * Feature: Added `CallController#listen` to do speech recognition
+  * Bugfix: Originating call is now answered before joining calls using `CallController#dial`
   * Bugfix: Output controller methods no longer falsely detect a string with a colon as a URI for an audio file
   * Bugfix: #record now accepts timeout in seconds instead of milliseconds
   * CS: Log when a controller is executed on a call
