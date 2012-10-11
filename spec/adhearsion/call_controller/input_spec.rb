@@ -64,8 +64,13 @@ module Adhearsion
         }
 
         def expect_component_complete_event
-          complete_event = Punchblock::Event::Complete.new
-          flexmock(complete_event).should_receive(:reason => flexmock(:interpretation => 'dtmf-5', :name => :input))
+          nlsml = RubySpeech::NLSML.draw do
+            interpretation confidence: 1 do
+              input "5", mode: :dtmf
+            end
+          end
+          reason = Punchblock::Component::Input::Complete::Match.new :nlsml => nlsml
+          complete_event = Punchblock::Event::Complete.new :reason => reason
           flexmock(Punchblock::Component::Input).new_instances do |input|
             input.should_receive(:complete?).and_return(false)
             input.should_receive(:complete_event).and_return(complete_event)
@@ -310,13 +315,17 @@ module Adhearsion
           Punchblock::Component::Input.new :grammar => { :value => grxml }
         }
 
-        def expect_component_complete_event(reason = nil)
-          complete_event = Punchblock::Event::Complete.new
-          unless reason
-            reason = flexmock(:interpretation => 'yes', :name => :input)
-            reason.should_receive(:find_first).with('nlsml').and_return :foo
+        let(:nlsml) do
+          RubySpeech::NLSML.draw do
+            interpretation confidence: 1 do
+              input "yes", mode: :speech
+            end
           end
-          flexmock(complete_event).should_receive(:reason => reason)
+        end
+
+        def expect_component_complete_event(reason = nil)
+          reason ||= Punchblock::Component::Input::Complete::Match.new :nlsml => nlsml
+          complete_event = Punchblock::Event::Complete.new :reason => reason
           flexmock(Punchblock::Component::Input).new_instances do |input|
             input.should_receive(:complete?).and_return(false)
             input.should_receive(:complete_event).and_return(complete_event)
@@ -353,7 +362,7 @@ module Adhearsion
           result = subject.listen options: %w{yes no}
           result.response.should be == 'yes'
           result.status.should be == :match
-          result.nlsml.should be == :foo
+          result.nlsml.should be == nlsml
         end
 
         context "with a nil timeout" do

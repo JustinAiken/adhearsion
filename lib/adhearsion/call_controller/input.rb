@@ -215,10 +215,10 @@ module Adhearsion
 
         Result.new.tap do |result|
           case reason
-          when proc { |r| r.respond_to? :interpretation }
-            result.response = reason.interpretation
+          when proc { |r| r.respond_to? :nlsml }
+            result.response = reason.utterance
             result.status   = :match
-            result.nlsml    = reason.find_first('nlsml')
+            result.nlsml    = reason.nlsml
           else
             result.status = :nomatch
           end
@@ -257,8 +257,7 @@ module Adhearsion
           }
 
         reason = input_component.complete_event.reason
-        result = reason.respond_to?(:interpretation) ? reason.interpretation : nil
-        parse_single_dtmf result
+        reason.respond_to?(:utterance) ? reason.utterance : nil
       end
 
       # @private
