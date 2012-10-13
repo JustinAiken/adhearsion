@@ -208,8 +208,11 @@ module Adhearsion
           end
           { value: grammar }
         end
+        input_options = opts.merge(grammar: grammar_opts)
+        [:options, :grammar_url].each { |o| input_options.delete o }
 
-        input_component = execute_component_and_await_completion Punchblock::Component::Input.new grammar: grammar_opts
+        input_component = Punchblock::Component::Input.new input_options
+        execute_component_and_await_completion input_component
 
         reason = input_component.complete_event.reason
 
