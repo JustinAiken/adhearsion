@@ -369,6 +369,11 @@ module Adhearsion
             end
           end
 
+          it 'plays all arguments as an array' do
+            expect_ssml_output ssml
+            subject.play(args).should be true
+          end
+
           it 'plays all arguments in one document' do
             expect_ssml_output ssml
             subject.play(*args).should be true
